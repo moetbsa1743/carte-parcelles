@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Carte des parcelles - Démo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    #searchBox {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    #results {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #results li {
+      cursor: pointer;
+      padding: 5px;
+    }
+    #results li:hover {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <div id="searchBox">
+    <input type="text" id="search" placeholder="Rechercher une parcelle..." />
+    <ul id="results"></ul>
+  </div>
+  <div id="map"></div>
+
+  <script>
+    const parcelles = [
+      { name: "Épinaux 1102 01", lat: 48.25156, lng: 4.70329 },
+      { name: "Épinaux 1102 02", lat: 48.25169, lng: 4.70507 },
+      { name: "Épinaux 1102 03", lat: 48.25069, lng: 4.70538 }
+    ];
+
+    let map;
+    let markers = [];
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 48.25156, lng: 4.70329 },
+        zoom: 16
+      });
+
+      parcelles.forEach(p => {
+        const marker = new google.maps.Marker({
+          position: { lat: p.lat, lng: p.lng },
+          map: map,
+          title: p.name
+        });
+
+        marker.addListener('click', () => {
+          window.open(`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`);
+        });
+
+        markers.push({ ...p, marker });
+      });
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          const userMarker = new google.maps.Marker({
+            position: {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            },
+            map: map,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: "#00f",
+              fillOpacity: 0.8,
+              strokeWeight: 2,
+              strokeColor: "#fff"
+            },
+            title: "Vous êtes ici"
+          });
+        });
+      }
+
+      document.getElementById("search").addEventListener("input", function() {
+        const value = this.value.toLowerCase();
+        const resultBox = document.getElementById("results");
+        resultBox.innerHTML = "";
+
+        markers.filter(m => m.name.toLowerCase().includes(value)).forEach(m => {
+          const li = document.createElement("li");
+          li.textContent = m.name;
+          li.onclick = () => {
+            map.setCenter({ lat: m.lat, lng: m.lng });
+            google.maps.event.trigger(m.marker, 'click');
+          };
+          resultBox.appendChild(li);
+        });
+      });
+    }
+  </script>
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AlzaSyAruzOyDebx85nhf7Pd-SX0BZsqsBQ8cPY&callback=initMap">
+  </script>
+</body>
+</html>
